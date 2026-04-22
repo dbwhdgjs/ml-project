@@ -106,9 +106,113 @@ body { background: #F5F6F8; color: #191F28; min-height: 100vh; }
 .hidden { display: none !important; }
 
 .chart-wrap { margin-top: 16px; height: 200px; position: relative; }
+
+/* ===== 햄버거 메뉴 ===== */
+.hamburger {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    width: 44px; height: 44px; background: #fff; border: 1px solid #E5E8EB;
+    border-radius: 12px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; padding: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.15s;
+}
+.hamburger:hover { transform: scale(1.05); }
+.hamburger-icon {
+    width: 20px; height: 14px; position: relative;
+}
+.hamburger-icon span {
+    display: block; position: absolute; height: 2px; width: 100%;
+    background: #191F28; border-radius: 2px; transition: all 0.25s;
+}
+.hamburger-icon span:nth-child(1) { top: 0; }
+.hamburger-icon span:nth-child(2) { top: 6px; }
+.hamburger-icon span:nth-child(3) { top: 12px; }
+.hamburger.open .hamburger-icon span:nth-child(1) {
+    top: 6px; transform: rotate(45deg);
+}
+.hamburger.open .hamburger-icon span:nth-child(2) { opacity: 0; }
+.hamburger.open .hamburger-icon span:nth-child(3) {
+    top: 6px; transform: rotate(-45deg);
+}
+
+.menu-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); z-index: 98;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.menu-overlay.open { opacity: 1; pointer-events: auto; }
+
+.side-menu {
+    position: fixed; top: 0; right: -280px; width: 280px; height: 100%;
+    background: #fff; z-index: 99; padding: 70px 20px 20px;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+.side-menu.open { right: 0; }
+.side-menu-title {
+    font-size: 12px; font-weight: 700; color: #8B95A1;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 8px 12px; margin-top: 8px;
+}
+.side-menu-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 12px; border-radius: 10px;
+    font-size: 15px; font-weight: 500; color: #191F28;
+    cursor: pointer; transition: background 0.15s;
+    background: none; border: none; width: 100%; text-align: left;
+}
+.side-menu-item:hover { background: #F5F6F8; }
+.side-menu-item.active { background: #E8F3FF; color: #3182F6; font-weight: 700; }
+.side-menu-item .icon { font-size: 18px; }
+
+/* ===== 성능 페이지 ===== */
+.metric-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.metric-table th, .metric-table td {
+    padding: 10px 8px; text-align: center; border-bottom: 1px solid #F2F3F5;
+}
+.metric-table th {
+    background: #F8F9FA; font-weight: 700; color: #4E5968;
+    font-size: 12px;
+}
+.metric-table tr.highlight td {
+    background: #FFF7E6; font-weight: 700; color: #191F28;
+}
+.metric-table td.best { color: #F04452; font-weight: 900; }
+.chart-img {
+    width: 100%; height: auto; display: block;
+    margin: 12px 0; border-radius: 8px;
+}
+.caption {
+    font-size: 12px; color: #8B95A1; text-align: center;
+    margin-top: 4px; line-height: 1.5;
+}
 </style>
 </head>
 <body>
+
+<!-- ============ 햄버거 메뉴 ============ -->
+<button class="hamburger" id="hamburgerBtn" onclick="toggleMenu()" aria-label="메뉴">
+    <div class="hamburger-icon">
+        <span></span><span></span><span></span>
+    </div>
+</button>
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+<nav class="side-menu" id="sideMenu">
+    <div class="side-menu-title">페이지</div>
+    <button class="side-menu-item" id="nav-home" onclick="navTo('home')">
+        <span class="icon">🏠</span> 홈
+    </button>
+    <button class="side-menu-item" id="nav-oil" onclick="navTo('oil')">
+        <span class="icon">🛢️</span> 원유 분석
+    </button>
+    <div class="side-menu-title" style="margin-top:16px;">발표 자료</div>
+    <button class="side-menu-item" id="nav-perf" onclick="navTo('perf')">
+        <span class="icon">📊</span> 모델 성능 지표
+    </button>
+</nav>
 
 <div class="container">
 
@@ -252,6 +356,97 @@ body { background: #F5F6F8; color: #191F28; min-height: 100vh; }
     </div>
 </div>
 
+<!-- ============ 성능 지표 ============ -->
+<div id="page-perf" class="hidden">
+    <div class="main-header">
+        <h1>모델 성능 지표</h1>
+        <p>XGBoost · 5-Fold 시계열 교차검증</p>
+    </div>
+
+    <!-- 5개 모델 비교 표 -->
+    <div class="card">
+        <div class="card-label">모델별 성능 비교 (5-Fold 평균)</div>
+        <div style="font-size:12px; color:#8B95A1; margin:4px 0 12px 0;">
+            이상변동 분류 기준 · XGBoost가 Recall·F1 최고
+        </div>
+        <div style="overflow-x:auto;">
+        <table class="metric-table">
+            <thead>
+                <tr>
+                    <th>모델</th><th>Accuracy</th><th>Precision</th>
+                    <th>Recall</th><th>F1</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Random Forest</td><td>0.611</td><td>0.373</td><td>0.224</td><td>0.261</td></tr>
+                <tr><td>Logistic Regression</td><td>0.558</td><td>0.340</td><td>0.260</td><td>0.277</td></tr>
+                <tr><td>SVM (RBF)</td><td class="best">0.631</td><td>0.385</td><td>0.207</td><td>0.254</td></tr>
+                <tr class="highlight"><td>XGBoost ⭐</td><td>0.590</td><td>0.365</td><td class="best">0.286</td><td class="best">0.324</td></tr>
+                <tr><td>KNN</td><td>0.575</td><td>0.335</td><td>0.179</td><td>0.218</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <div class="caption">
+            급변동(±2% 이상) 감지 목적상 <b>Recall</b>이 핵심 지표 →
+            XGBoost 선정
+        </div>
+    </div>
+
+    <!-- 혼동행렬 -->
+    <div class="card">
+        <div class="card-label">혼동행렬 (Confusion Matrix)</div>
+        <div style="font-size:12px; color:#8B95A1; margin:4px 0 8px 0;">
+            5개 모델의 예측 결과를 실제값과 대조한 표
+        </div>
+        <img src="cm.png" alt="Confusion Matrices" class="chart-img" loading="lazy">
+        <div class="caption">
+            행 = 실제값 / 열 = 예측값 · 대각선이 정답<br>
+            XGBoost는 <b>True Positive(이상변동을 제대로 맞춘 수)</b>가 가장 많음
+        </div>
+    </div>
+
+    <!-- Fold별 F1 -->
+    <div class="card">
+        <div class="card-label">Fold별 F1 Score (5-Fold TimeSeriesSplit)</div>
+        <div style="font-size:12px; color:#8B95A1; margin:4px 0 8px 0;">
+            시간 순서를 보장하는 시계열 교차검증 결과
+        </div>
+        <img src="fold_f1.png" alt="Fold F1 Scores" class="chart-img" loading="lazy">
+        <div class="caption">
+            각 Fold(학습기간-검증기간 분할)에서의 F1 점수 ·
+            <b>XGBoost가 모든 Fold에서 안정적으로 상위권 유지</b>
+        </div>
+    </div>
+
+    <!-- ROC -->
+    <div class="card">
+        <div class="card-label">ROC Curve</div>
+        <div style="font-size:12px; color:#8B95A1; margin:4px 0 8px 0;">
+            임계값 변화에 따른 TPR-FPR 곡선 · AUC 비교
+        </div>
+        <img src="roc.png" alt="ROC Curves" class="chart-img" loading="lazy">
+        <div class="caption">
+            곡선이 좌상단에 가까울수록 우수 · XGBoost가 AUC 최고
+        </div>
+    </div>
+
+    <!-- 핵심 인사이트 -->
+    <div class="card" style="background:#FFF7E6; border-left:4px solid #F59E0B;">
+        <div class="card-label" style="color:#F59E0B;">발표 포인트</div>
+        <div style="font-size:14px; color:#191F28; line-height:1.7; margin-top:8px;">
+            1️⃣ <b>목표 지표가 Recall인 이유</b>: "놓친 이상변동 = 위험" 이므로<br>
+            2️⃣ <b>XGBoost 선정 근거</b>: Recall 0.286 · F1 0.324 — 5개 중 1위<br>
+            3️⃣ <b>시계열 CV 채택</b>: 시간 누수(leakage) 방지를 위해 TimeSeriesSplit<br>
+            4️⃣ <b>불균형 데이터 대응</b>: scale_pos_weight=1.8로 소수 클래스 가중
+        </div>
+    </div>
+
+    <div class="bottom-note">
+        2주차 교차검증 결과 요약 · 2026.04.19 기준<br>
+        임태후 · 유종헌
+    </div>
+</div>
+
 </div>
 
 <script>
@@ -282,16 +477,28 @@ function renderHome() {
     document.getElementById('bottom-period').textContent = `${m.data_period_start} ~ ${m.data_period_end}`;
 }
 
-function goOil() {
-    document.getElementById('page-home').classList.add('hidden');
-    document.getElementById('page-oil').classList.remove('hidden');
+function goOil() { navTo('oil'); }
+function goHome() { navTo('home'); }
+
+function navTo(page) {
+    ['home','oil','perf'].forEach(p => {
+        document.getElementById(`page-${p}`).classList.add('hidden');
+        const nav = document.getElementById(`nav-${p}`);
+        if (nav) nav.classList.remove('active');
+    });
+    document.getElementById(`page-${page}`).classList.remove('hidden');
+    const navBtn = document.getElementById(`nav-${page}`);
+    if (navBtn) navBtn.classList.add('active');
     window.scrollTo(0, 0);
-    renderOil();
+    if (page === 'oil') renderOil();
+    // 메뉴 열려있으면 닫기
+    if (document.getElementById('sideMenu').classList.contains('open')) toggleMenu();
 }
-function goHome() {
-    document.getElementById('page-oil').classList.add('hidden');
-    document.getElementById('page-home').classList.remove('hidden');
-    window.scrollTo(0, 0);
+
+function toggleMenu() {
+    document.getElementById('sideMenu').classList.toggle('open');
+    document.getElementById('menuOverlay').classList.toggle('open');
+    document.getElementById('hamburgerBtn').classList.toggle('open');
 }
 
 function setMode(mode) {
