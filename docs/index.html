@@ -418,29 +418,6 @@ body { background: #F5F6F8; color: #191F28; min-height: 100vh; }
         </div>
     </div>
 
-    <!-- ROC -->
-    <div class="card">
-        <div class="card-label">ROC Curve</div>
-        <div style="font-size:12px; color:#8B95A1; margin:4px 0 8px 0;">
-            임계값 변화에 따른 TPR-FPR 곡선 · AUC 비교
-        </div>
-        <img src="roc.png" alt="ROC Curves" class="chart-img" loading="lazy">
-        <div class="caption">
-            곡선이 좌상단에 가까울수록 우수 · XGBoost가 AUC 최고
-        </div>
-    </div>
-
-    <!-- 핵심 인사이트 -->
-    <div class="card" style="background:#FFF7E6; border-left:4px solid #F59E0B;">
-        <div class="card-label" style="color:#F59E0B;">발표 포인트</div>
-        <div style="font-size:14px; color:#191F28; line-height:1.7; margin-top:8px;">
-            1️⃣ <b>목표 지표가 Recall인 이유</b>: "놓친 이상변동 = 위험" 이므로<br>
-            2️⃣ <b>XGBoost 선정 근거</b>: Recall 0.286 · F1 0.324 — 5개 중 1위<br>
-            3️⃣ <b>시계열 CV 채택</b>: 시간 누수(leakage) 방지를 위해 TimeSeriesSplit<br>
-            4️⃣ <b>불균형 데이터 대응</b>: scale_pos_weight=1.8로 소수 클래스 가중
-        </div>
-    </div>
-
     <div class="bottom-note">
         2주차 교차검증 결과 요약 · 2026.04.19 기준<br>
         임태후 · 유종헌
