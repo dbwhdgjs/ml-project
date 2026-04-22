@@ -20,8 +20,29 @@ python3 data_updater.py --analyze
 python3 data_updater.py --watch --start-hour 7 --end-hour 11 --interval-min 20
 
 
-# [5] 데모앱 실행
+# [5] 데모앱 실행 (로컬)
 streamlit run demo_app.py
+
+
+# ============================================
+# 정적 HTML 사이트 갱신 (GitHub Pages)
+# 배포 URL: https://dbwhdgjs.github.io/ml-project/
+# ============================================
+
+# [6] xlsx 갱신 + JSON 재생성 + 배포 (한 번에)
+cd /Users/yujongheon/Desktop/test/yjh-claude/ML_project
+python3 week2/code/data_updater.py --update
+python3 docs/export_predictions.py
+git add docs/predictions.json
+git commit -m "Update predictions"
+git push
+# → 1~2분 후 사이트에 반영됨
+
+# [6-1] JSON만 재생성 (xlsx는 이미 갱신된 상태)
+python3 docs/export_predictions.py
+
+# [6-2] 배포만 (JSON 이미 생성된 상태)
+git add docs/predictions.json && git commit -m "Update predictions" && git push
 
 
 # ============================================
@@ -45,3 +66,8 @@ launchctl start com.yjh.dataupdater
 crontab -e
 # 아래 한 줄 추가 (매일 KST 07:30 실행)
 30 7 * * * /usr/bin/python3 /Users/yujongheon/Desktop/test/yjh-claude/ML_project/week2/code/data_updater.py --update
+
+# ============================================
+# 사이트 자동 배포까지 포함하는 launchd/cron 설정은
+# 데이터_자동갱신_운영가이드.txt 참고
+# ============================================

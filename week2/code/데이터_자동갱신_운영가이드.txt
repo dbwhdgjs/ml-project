@@ -16,6 +16,13 @@
   - commodity_vix_gpr_latest.xlsx  : GPR forward-fill + 원자재/VIX 최신
   - update_log.json                : 갱신 이력 (최근 500건 유지)
 
+[배포 현황]
+  - 로컬 Streamlit: streamlit run demo_app.py
+  - 공개 사이트(정적 HTML): https://dbwhdgjs.github.io/ml-project/
+    · GitHub Pages로 호스팅 (repo: dbwhdgjs/ml-project, branch: main, folder: /docs)
+    · 강의실/외부 PC/모바일에서 로그인 없이 접속 가능
+    · docs/predictions.json 이 갱신되면 1~2분 뒤 자동 반영
+
 
 -----------------------------------------------
  1. 기본 명령어
@@ -115,6 +122,8 @@
  4. 데모앱 연동 방식
 -----------------------------------------------
 
+[A] 로컬 Streamlit (demo_app.py)
+
 demo_app.py 는 이미 자동 연동되도록 수정됨:
 
   @st.cache_data
@@ -126,11 +135,45 @@ demo_app.py 는 이미 자동 연동되도록 수정됨:
 → xlsx 파일 수정시각(mtime)이 바뀌면 Streamlit 캐시가 자동 무효화되어
   앱을 재시작하지 않아도 새 데이터로 다시 학습·예측함.
 
-홈 페이지에 아래 항목이 실시간으로 표시됨:
+
+[B] 공개 사이트 (GitHub Pages, docs/index.html)
+
+xlsx → predictions.json → HTML 순으로 데이터가 흐름.
+xlsx 가 바뀌면 JSON 을 재생성하고 git push 해야 사이트에 반영됨.
+
+  1) 데이터 갱신:
+       python3 week2/code/data_updater.py --update
+
+  2) JSON 재생성:
+       python3 docs/export_predictions.py
+     → docs/predictions.json 에 다음이 저장됨:
+         · meta   : 데이터 기간, GPR 마지막 날짜, 갱신 시각
+         · latest : 최신 가격, 급변동 확률, 예측 방향, 예측 수익률
+         · history: 최근 30일 가격 + 예측 시계열 (차트용)
+
+  3) 배포:
+       git add docs/predictions.json
+       git commit -m "Update predictions"
+       git push
+     → 1~2분 뒤 https://dbwhdgjs.github.io/ml-project/ 에 자동 반영
+
+[C] 원스텝 스크립트 예시 (수동 실행용)
+
+  #!/bin/bash
+  cd /Users/yujongheon/Desktop/test/yjh-claude/ML_project
+  python3 week2/code/data_updater.py --update || exit 1
+  python3 docs/export_predictions.py          || exit 1
+  git add docs/predictions.json
+  git diff --cached --quiet && { echo "no change"; exit 0; }
+  git commit -m "Update predictions $(date +%Y-%m-%d)"
+  git push
+
+
+홈 페이지 / 사이트에 아래 항목이 표시됨:
   - 분석 데이터 일수
   - 데이터 기간 (시작 ~ 마지막)
   - GPR 반영 마지막 날짜
-  - 파일 마지막 갱신 시각
+  - 파일 마지막 갱신 시각 (사이트는 JSON 생성 시각 기준)
 
 
 -----------------------------------------------
@@ -154,6 +197,16 @@ demo_app.py 는 이미 자동 연동되도록 수정됨:
  → 브라우저 캐시 또는 Streamlit 캐시 문제.
    앱에서 'R' (rerun) 혹은 상단 메뉴 → Clear cache → Rerun.
 
+[Q] 공개 사이트(Pages)에 새 데이터가 반영 안 됨
+ → 체크리스트:
+   1. docs/export_predictions.py 를 실행했는가?
+      (xlsx 갱신만으론 사이트가 안 바뀜. JSON 재생성 필요)
+   2. git push 를 했는가? (로컬만 수정해도 사이트는 그대로)
+   3. push 후 1~2분 기다렸는가? (GitHub Actions 빌드 시간)
+   4. 브라우저 강력 새로고침 (Cmd+Shift+R) 해봤는가?
+   5. GitHub 저장소 → Actions 탭에서 pages-build-deployment
+      워크플로가 정상 성공(초록 체크)인지 확인
+
 
 -----------------------------------------------
  6. 파일 구조 요약
@@ -162,15 +215,42 @@ demo_app.py 는 이미 자동 연동되도록 수정됨:
 ML_project/
 ├── data/
 │   ├── commodity_vix_gpr_live.xlsx      ← 자동 갱신
-│   ├── commodity_vix_gpr_latest.xlsx    ← 자동 갱신 (데모앱이 참조)
+│   ├── commodity_vix_gpr_latest.xlsx    ← 자동 갱신 (데모앱/JSON이 참조)
 │   └── update_log.json                  ← 자동 기록
 │
+├── docs/                                ← GitHub Pages 배포 루트
+│   ├── index.html                       ← 공개 사이트 (Toss 스타일 + Chart.js)
+│   ├── predictions.json                 ← 사이트가 읽는 예측 결과
+│   └── export_predictions.py            ← JSON 생성 스크립트
+│
 └── week2/code/
-    ├── data_updater.py                  ← 이번에 추가된 스크립트
-    ├── demo_app.py                      ← mtime 기반 자동 재로딩
-    └── 데이터_자동갱신_운영가이드.txt    ← 이 문서
+    ├── data_updater.py                  ← 데이터 자동 수집
+    ├── demo_app.py                      ← 로컬 Streamlit 데모
+    ├── 명령어.txt                       ← 실행 명령어 모음
+    └── 데이터_자동갱신_운영가이드.txt   ← 이 문서
+
+
+-----------------------------------------------
+ 7. 데이터 흐름 요약 (한눈에)
+-----------------------------------------------
+
+  [yfinance]        [matteoiacoviello GPR]
+       ↓                    ↓
+       └────── data_updater.py ──────┘
+                      ↓
+            data/*.xlsx (갱신)
+           ↙                    ↘
+  demo_app.py                 export_predictions.py
+  (로컬 Streamlit)                  ↓
+  mtime 기반 자동            docs/predictions.json
+  재학습/재예측                      ↓
+                             git push → GitHub Pages
+                                    ↓
+                      https://dbwhdgjs.github.io/ml-project/
+                      (강의실/모바일/외부 PC 누구나 접속)
+
 
 ===============================================
- 작성일: 2026-04-17
+ 작성일: 2026-04-17 (최초) / 2026-04-22 (GitHub Pages 반영)
  작성자: 임태후 · 유종헌
 ===============================================
