@@ -1,0 +1,176 @@
+===============================================
+  데이터 자동 갱신 운영 가이드
+  (data_updater.py 사용법)
+===============================================
+
+[개요]
+원자재(WTI/금/은/천연가스) · VIX · GPR 지수를 매일 자동으로 수집해서
+데모앱에 반영되는 xlsx 파일을 최신 상태로 유지하는 스크립트.
+
+데이터 소스:
+  - yfinance : CL=F, GC=F, NG=F, SI=F, ^VIX
+  - GPR      : https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls
+
+생성 파일 (ML_project/data/):
+  - commodity_vix_gpr_live.xlsx    : GPR 있는 날짜까지만 (inner join)
+  - commodity_vix_gpr_latest.xlsx  : GPR forward-fill + 원자재/VIX 최신
+  - update_log.json                : 갱신 이력 (최근 500건 유지)
+
+
+-----------------------------------------------
+ 1. 기본 명령어
+-----------------------------------------------
+
+위치:  ML_project/week2/code/
+
+[즉시 갱신 1회]
+    python data_updater.py --update
+
+[매일 자동 갱신 (데몬 모드)]
+    python data_updater.py --watch
+    → 기본: KST 06:00 ~ 10:00 사이 30분 간격으로 반영 확인
+    → 성공 시 그날은 종료, 다음날 06시에 다시 시작
+
+[최적 시각 분석]
+    python data_updater.py --analyze
+    → 누적된 update_log.json을 읽어
+      평균 최적 갱신 시각, 가장 빠른/늦은 성공 시각 출력
+
+[watch 옵션 커스텀]
+    python data_updater.py --watch --start-hour 7 --end-hour 11 --interval-min 20
+
+
+-----------------------------------------------
+ 2. 권장 운영 방식
+-----------------------------------------------
+
+[초반 1~2주]
+  --watch 로 돌려놓고 update_log.json을 쌓는다.
+  분석/노트북 작업할 때 백그라운드에서 돌리면 됨.
+
+[로그가 어느 정도 쌓인 후]
+  --analyze 실행 → 추천 시각 확인
+  예:
+      평균 최적 시각: KST 07:15
+      → 추천 watch 시작 시각: KST 07:00 (평균 -15분)
+  이 값을 --start-hour / --end-hour 에 반영해서 윈도우를 좁힌다.
+  (네트워크/프로세스 부하 줄임)
+
+
+-----------------------------------------------
+ 3. 맥에서 영구 자동화 (launchd 권장)
+-----------------------------------------------
+
+--watch 는 터미널이 열려 있어야 동작함.
+컴퓨터 재부팅/로그아웃 이후에도 돌아가게 하려면 launchd 등록 필요.
+
+[방법 1] 간단하게 매일 특정 시각에 --update 만 1회 실행
+
+  파일 경로: ~/Library/LaunchAgents/com.yjh.dataupdater.plist
+
+  ---------------------------------------------------------------
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+      "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.yjh.dataupdater</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/usr/bin/python3</string>
+      <string>/Users/yujongheon/Desktop/test/yjh-claude/ML_project/week2/code/data_updater.py</string>
+      <string>--update</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+      <key>Hour</key><integer>7</integer>
+      <key>Minute</key><integer>30</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/yujongheon/Desktop/test/yjh-claude/ML_project/data/launchd_out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/yujongheon/Desktop/test/yjh-claude/ML_project/data/launchd_err.log</string>
+  </dict>
+  </plist>
+  ---------------------------------------------------------------
+
+  등록:
+      launchctl load ~/Library/LaunchAgents/com.yjh.dataupdater.plist
+  해제:
+      launchctl unload ~/Library/LaunchAgents/com.yjh.dataupdater.plist
+  즉시 실행 테스트:
+      launchctl start com.yjh.dataupdater
+
+
+[방법 2] cron 이 익숙하면
+      crontab -e
+      30 7 * * * /usr/bin/python3 /Users/yujongheon/Desktop/test/yjh-claude/ML_project/week2/code/data_updater.py --update
+
+
+-----------------------------------------------
+ 4. 데모앱 연동 방식
+-----------------------------------------------
+
+demo_app.py 는 이미 자동 연동되도록 수정됨:
+
+  @st.cache_data
+  def load_and_train(filepath, mtime):
+      ...
+
+  load_and_train(latest_path, _file_mtime(latest_path))
+
+→ xlsx 파일 수정시각(mtime)이 바뀌면 Streamlit 캐시가 자동 무효화되어
+  앱을 재시작하지 않아도 새 데이터로 다시 학습·예측함.
+
+홈 페이지에 아래 항목이 실시간으로 표시됨:
+  - 분석 데이터 일수
+  - 데이터 기간 (시작 ~ 마지막)
+  - GPR 반영 마지막 날짜
+  - 파일 마지막 갱신 시각
+
+
+-----------------------------------------------
+ 5. 자주 생기는 이슈
+-----------------------------------------------
+
+[Q] 주말/공휴일에 데이터가 안 올라옴
+ → 정상. 미국 선물 시장이 쉬는 날은 yfinance가 새 데이터를 주지 않음.
+   --watch 는 "어제 데이터가 이미 있음" 상태면 갱신 스킵 후 대기.
+
+[Q] yfinance 에서 empty DataFrame 에러
+ → 일시적 네트워크 이슈 또는 야후 API 제한.
+   --watch 모드는 자동으로 30분 뒤 재시도.
+   --update 한 번만 실패한 거라면 몇 분 뒤 다시 실행.
+
+[Q] GPR xls 다운로드 실패
+ → matteoiacoviello.com 서버가 가끔 느릴 수 있음.
+   몇 분 뒤 재시도하면 보통 해결됨.
+
+[Q] 데모앱에 예전 데이터가 계속 보임
+ → 브라우저 캐시 또는 Streamlit 캐시 문제.
+   앱에서 'R' (rerun) 혹은 상단 메뉴 → Clear cache → Rerun.
+
+
+-----------------------------------------------
+ 6. 파일 구조 요약
+-----------------------------------------------
+
+ML_project/
+├── data/
+│   ├── commodity_vix_gpr_live.xlsx      ← 자동 갱신
+│   ├── commodity_vix_gpr_latest.xlsx    ← 자동 갱신 (데모앱이 참조)
+│   └── update_log.json                  ← 자동 기록
+│
+└── week2/code/
+    ├── data_updater.py                  ← 이번에 추가된 스크립트
+    ├── demo_app.py                      ← mtime 기반 자동 재로딩
+    └── 데이터_자동갱신_운영가이드.txt    ← 이 문서
+
+===============================================
+ 작성일: 2026-04-17
+ 작성자: 임태후 · 유종헌
+===============================================

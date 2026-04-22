@@ -1,0 +1,47 @@
+# ============================================
+# 데이터 자동 갱신 명령어 모음
+# 실행 위치: ML_project/week2/code/
+# ============================================
+
+
+# [1] 즉시 1회 갱신
+python3 data_updater.py --update
+
+
+# [2] 매일 자동 갱신 (기본: KST 06~10시, 30분 간격)
+python3 data_updater.py --watch
+
+
+# [3] 최적 갱신 시각 분석
+python3 data_updater.py --analyze
+
+
+# [4] watch 시간대/간격 커스텀
+python3 data_updater.py --watch --start-hour 7 --end-hour 11 --interval-min 20
+
+
+# [5] 데모앱 실행
+streamlit run demo_app.py
+
+
+# ============================================
+# launchd (맥 영구 자동화)
+# ============================================
+
+# 등록
+launchctl load ~/Library/LaunchAgents/com.yjh.dataupdater.plist
+
+# 해제
+launchctl unload ~/Library/LaunchAgents/com.yjh.dataupdater.plist
+
+# 즉시 실행 테스트
+launchctl start com.yjh.dataupdater
+
+
+# ============================================
+# cron (대안)
+# ============================================
+
+crontab -e
+# 아래 한 줄 추가 (매일 KST 07:30 실행)
+30 7 * * * /usr/bin/python3 /Users/yujongheon/Desktop/test/yjh-claude/ML_project/week2/code/data_updater.py --update

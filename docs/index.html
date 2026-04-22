@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원자재 가격 변동 알림</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+body { background: #F5F6F8; color: #191F28; min-height: 100vh; }
+.container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+.main-header { text-align: center; padding: 30px 0 10px 0; }
+.main-header h1 { font-size: 24px; font-weight: 900; color: #191F28; }
+.main-header p { font-size: 13px; color: #8B95A1; margin-top: 4px; }
+
+.card {
+    background: #fff; border-radius: 16px; padding: 20px 24px;
+    margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card-label {
+    font-size: 12px; font-weight: 700; color: #8B95A1;
+    text-transform: uppercase; letter-spacing: 0.3px;
+}
+.card-value { font-size: 36px; font-weight: 900; margin: 8px 0; }
+.card-sub { font-size: 12px; color: #8B95A1; }
+.divider { height: 1px; background: #F2F3F5; margin: 12px 0; }
+
+.home-desc {
+    text-align: center; font-size: 14px; color: #4E5968;
+    line-height: 1.7; margin-bottom: 16px;
+}
+.stats-row {
+    display: flex; justify-content: center; gap: 24px; margin-top: 8px;
+}
+.stat-item { text-align: center; }
+.stat-value { font-size: 24px; font-weight: 900; color: #3182F6; }
+.stat-label { font-size: 12px; color: #8B95A1; }
+
+.meta-row {
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid #F2F3F5;
+    display: flex; justify-content: space-between; font-size: 12px; color: #8B95A1;
+    flex-wrap: wrap; gap: 4px;
+}
+
+.btn {
+    width: 100%; padding: 16px; background: #fff; border: 1px solid #E5E8EB;
+    border-radius: 12px; font-size: 15px; font-weight: 700; color: #191F28;
+    margin: 6px 0; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:hover:not(:disabled) { background: #F9FAFB; border-color: #3182F6; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: #3182F6; color: #fff; border-color: #3182F6; }
+.btn-primary:hover { background: #1B64DA; }
+.btn-back {
+    background: none; border: none; color: #4E5968; font-size: 14px;
+    padding: 8px 0; cursor: pointer; margin-bottom: 8px;
+}
+.btn-back:hover { color: #191F28; }
+
+.date-pill {
+    display: inline-block; padding: 4px 12px; background: #E8F3FF;
+    color: #3182F6; border-radius: 20px; font-size: 12px; font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.mode-toggle { display: flex; gap: 8px; margin: 8px 0; }
+.mode-toggle .btn { flex: 1; margin: 0; }
+
+.mode-badge {
+    padding: 12px 16px; border-radius: 8px; margin: 8px 0 0 0;
+    border-left: 3px solid;
+}
+.mode-badge-focus { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.mode-badge-desc { font-size: 13px; color: #4E5968; line-height: 1.5; }
+.mode-badge-target { color: #8B95A1; font-size: 12px; }
+
+.prob-bar-bg {
+    position: relative; height: 8px; background: #F2F3F5;
+    border-radius: 4px; margin-top: 16px;
+}
+.prob-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.prob-threshold {
+    position: absolute; top: -4px; width: 2px; height: 16px;
+    background: #4E5968;
+}
+.prob-threshold-label {
+    position: absolute; top: 18px; font-size: 10px; color: #8B95A1;
+    transform: translateX(-50%); white-space: nowrap;
+}
+
+.info-row {
+    display: flex; justify-content: space-between; padding: 8px 0;
+    font-size: 13px;
+}
+.info-label { color: #8B95A1; }
+.info-value { color: #191F28; font-weight: 500; }
+
+.bottom-note {
+    text-align: center; font-size: 12px; color: #8B95A1;
+    padding: 30px 0; line-height: 1.7;
+}
+
+.hidden { display: none !important; }
+
+.chart-wrap { margin-top: 16px; height: 200px; position: relative; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ============ HOME ============ -->
+<div id="page-home">
+    <div class="main-header" style="padding: 50px 0 20px 0;">
+        <h1 style="font-size:28px;">원자재 가격 변동 알림</h1>
+        <p>전쟁·정치 불안에 민감한 원자재, 미리 신호를 포착합니다</p>
+    </div>
+
+    <div class="card">
+        <div class="home-desc">
+            전쟁·정치 불안 지수와 시장 불안 지수를 활용해<br>
+            원자재 가격의 <b>큰 폭 변동을 미리 감지</b>하고<br>
+            <b>가격 흐름을 예측</b>하는 서비스입니다.
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-rows">—</div>
+                <div class="stat-label">분석 데이터(일)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">7</div>
+                <div class="stat-label">분석 지표</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">AI</div>
+                <div class="stat-label">예측 엔진</div>
+            </div>
+        </div>
+        <div class="meta-row">
+            <span id="meta-period">—</span>
+            <span id="meta-updated">—</span>
+        </div>
+    </div>
+
+    <div style="margin-top:8px;">
+        <div class="card-label" style="padding:0 4px; margin-bottom:4px;">원자재 선택</div>
+    </div>
+
+    <button class="btn" onclick="goOil()">🛢️  원유 (WTI)  —  분석 가능</button>
+    <button class="btn" disabled>🥇  금 (Gold)  —  준비 중</button>
+    <button class="btn" disabled>🥈  은 (Silver)  —  준비 중</button>
+    <button class="btn" disabled>🔥  천연가스  —  준비 중</button>
+
+    <div class="bottom-note" style="padding-top:30px;">
+        전쟁·정치 불안에 반응하는 원자재 가격 알림 서비스<br>
+        <span id="bottom-period">—</span> · AI 기반 예측 (교차검증 적용)<br><br>
+        임태후 · 유종헌
+    </div>
+</div>
+
+<!-- ============ OIL ============ -->
+<div id="page-oil" class="hidden">
+    <button class="btn-back" onclick="goHome()">← 돌아가기</button>
+
+    <div class="main-header">
+        <h1>원유 급변동 알림</h1>
+        <p>AI 기반 실시간 분석</p>
+    </div>
+
+    <div class="card">
+        <div style="text-align:center;">
+            <span class="date-pill" id="oil-today">오늘 —</span>
+        </div>
+        <div style="text-align:center;">
+            <div class="card-label">WTI 원유 최근 종가</div>
+            <div class="card-value" id="oil-price">$—</div>
+            <div class="card-sub" id="oil-price-sub">최근 데이터 기준 (—)</div>
+        </div>
+    </div>
+
+    <div style="margin-top:16px;">
+        <div class="card-label" style="padding:0 4px; margin-bottom:6px;">서비스 모드</div>
+    </div>
+
+    <div class="mode-toggle">
+        <button class="btn" id="btn-risk" onclick="setMode('risk')">🛡  위험 경보</button>
+        <button class="btn" id="btn-timing" onclick="setMode('timing')">🎯  매수 타이밍</button>
+    </div>
+
+    <div class="mode-badge" id="mode-badge">
+        <div class="mode-badge-focus" id="mode-focus">—</div>
+        <div class="mode-badge-desc">
+            <span id="mode-desc">—</span><br>
+            <span class="mode-badge-target">대상: <span id="mode-target">—</span></span>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin:20px 0 0 0;">
+        <span style="font-size:13px; font-weight:700; color:#3182F6;" id="oil-predict-date">
+            — 예측
+        </span>
+    </div>
+
+    <!-- 예측 카드 -->
+    <div class="card" id="prediction-card">
+        <!-- JS가 채움 -->
+    </div>
+
+    <!-- 30일 차트 -->
+    <div class="card">
+        <div class="card-label">최근 30일 원유 가격 + 급변동 확률</div>
+        <div class="chart-wrap">
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card" style="background:#F8F9FA; padding:20px 24px;">
+        <div style="font-size:12px; color:#8B95A1; line-height:1.7;">
+            <span style="font-weight:700; color:#4E5968;">수익률 예측 참고사항</span><br>
+            수익률 숫자는 급변동 감지에 비해 정확도가 낮고,
+            실제보다 보수적으로 예측하는 경향이 있습니다.
+            급변동 가능성과 가격 방향을 중심으로 참고하시고,
+            수익률 숫자는 보조 지표로 활용하세요.
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">상세 분석</div>
+        <div class="divider"></div>
+        <div class="info-row"><span class="info-label">예측 대상일</span>
+            <span class="info-value" id="info-predict-date">—</span></div>
+        <div class="info-row"><span class="info-label">위기 지수 반영일</span>
+            <span class="info-value" id="info-gpr">—</span></div>
+        <div class="info-row"><span class="info-label">시장데이터 기준</span>
+            <span class="info-value" id="info-data">—</span></div>
+        <div class="info-row"><span class="info-label">분석 방식</span>
+            <span class="info-value">AI 예측 (교차검증)</span></div>
+        <div class="info-row"><span class="info-label">학습 기간</span>
+            <span class="info-value">2020.01 ~ <span id="info-end">—</span></span></div>
+        <div class="info-row"><span class="info-label">급변동 기준</span>
+            <span class="info-value">하루 ±2% 이상 움직임</span></div>
+    </div>
+
+    <div class="bottom-note">
+        본 서비스는 참고용으로만 활용하시기 바라며,<br>
+        투자 권유가 아닙니다. 투자 판단의 책임은 본인에게 있습니다.<br><br>
+        전쟁·정치 불안에 반응하는 원자재 가격 알림 서비스<br>
+        임태후 · 유종헌
+    </div>
+</div>
+
+</div>
+
+<script>
+const MODES = {
+    risk:   { label:'위험 경보', icon:'🛡', threshold:0.3, focus:'놓치지 않기 우선', color:'#F04452',
+              desc:'작은 위험 신호도 놓치지 않고 알려드립니다',
+              target:'변동성이 걱정되는 투자자' },
+    timing: { label:'매수 타이밍', icon:'🎯', threshold:0.7, focus:'확실할 때만 추천', color:'#3182F6',
+              desc:'확신이 들 때만 매수·매도를 추천합니다',
+              target:'신중한 투자 결정이 필요한 기관' },
+};
+
+let DATA = null;
+let currentMode = 'risk';
+let chart = null;
+
+async function loadData() {
+    const res = await fetch('predictions.json');
+    DATA = await res.json();
+    renderHome();
+}
+
+function renderHome() {
+    const m = DATA.meta;
+    document.getElementById('stat-rows').textContent = m.data_rows.toLocaleString();
+    document.getElementById('meta-period').textContent = `데이터 기간 ${m.data_period_start} ~ ${m.data_period_end}`;
+    document.getElementById('meta-updated').textContent = `GPR ${m.gpr_last} · 갱신 ${m.updated_at}`;
+    document.getElementById('bottom-period').textContent = `${m.data_period_start} ~ ${m.data_period_end}`;
+}
+
+function goOil() {
+    document.getElementById('page-home').classList.add('hidden');
+    document.getElementById('page-oil').classList.remove('hidden');
+    window.scrollTo(0, 0);
+    renderOil();
+}
+function goHome() {
+    document.getElementById('page-oil').classList.add('hidden');
+    document.getElementById('page-home').classList.remove('hidden');
+    window.scrollTo(0, 0);
+}
+
+function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-risk').className = mode === 'risk' ? 'btn btn-primary' : 'btn';
+    document.getElementById('btn-timing').className = mode === 'timing' ? 'btn btn-primary' : 'btn';
+    renderOil();
+}
+
+function tomorrowStr() {
+    let d = new Date();
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() === 6) d.setDate(d.getDate() + 2);
+    else if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+    return d;
+}
+function fmtDateKo(d) {
+    return `${d.getFullYear()}년 ${String(d.getMonth()+1).padStart(2,'0')}월 ${String(d.getDate()).padStart(2,'0')}일`;
+}
+function fmtDateDot(s) {
+    // '2026-04-22' → '2026.04.22'
+    return s.replaceAll('-', '.');
+}
+
+function renderOil() {
+    const m = DATA.meta, l = DATA.latest;
+    const today = new Date();
+    const tmr = tomorrowStr();
+
+    document.getElementById('oil-today').textContent = `오늘 ${fmtDateKo(today)}`;
+    document.getElementById('oil-price').textContent = `$${l.price.toFixed(2)}`;
+    document.getElementById('oil-price-sub').textContent = `최근 데이터 기준 (${m.data_last})`;
+    document.getElementById('oil-predict-date').textContent =
+        `${String(tmr.getMonth()+1).padStart(2,'0')}월 ${String(tmr.getDate()).padStart(2,'0')}일 예측`;
+
+    // 모드 뱃지
+    const mode = MODES[currentMode];
+    const badge = document.getElementById('mode-badge');
+    badge.style.background = mode.color + '0F';
+    badge.style.borderLeftColor = mode.color;
+    document.getElementById('mode-focus').textContent = `${mode.focus} · 경보 기준 ${Math.round(mode.threshold*100)}%`;
+    document.getElementById('mode-focus').style.color = mode.color;
+    document.getElementById('mode-desc').textContent = mode.desc;
+    document.getElementById('mode-target').textContent = mode.target;
+
+    // 상세 분석
+    document.getElementById('info-predict-date').textContent = fmtDateKo(tmr);
+    document.getElementById('info-gpr').textContent = m.gpr_last;
+    document.getElementById('info-data').textContent = m.data_last;
+    document.getElementById('info-end').textContent = m.data_period_end;
+
+    // 예측 카드 (mode별 레이아웃)
+    renderPredictionCard(l, mode);
+
+    // 차트
+    renderChart();
+}
+
+function renderPredictionCard(l, mode) {
+    const isAlert = l.prob_anom >= mode.threshold;
+    const probColor = isAlert ? '#F04452' : '#00C853';
+    const dirColor = l.pred_dir === 1 ? '#F04452' : '#3182F6';
+    const retColor = l.pred_ret > 0 ? '#F04452' : '#3182F6';
+    const retSign = l.pred_ret > 0 ? '+' : '';
+    const dirIcon = l.pred_dir === 1 ? '↑' : '↓';
+    const dirText = l.pred_dir === 1 ? '상승' : '하락';
+
+    let action, actionIcon, actionColor, actionBg, actionSub;
+
+    if (currentMode === 'risk') {
+        if (isAlert) {
+            action = '포지션 관리 권장'; actionIcon = '⚠';
+            actionColor = '#F04452'; actionBg = '#FFF0F0';
+            actionSub = '큰 폭의 가격 변동이 예상됩니다';
+        } else {
+            action = '안정 구간'; actionIcon = '✓';
+            actionColor = '#00C853'; actionBg = '#E8F7EF';
+            actionSub = '통상적인 변동 범위 내에 있습니다';
+        }
+    } else {
+        // timing
+        if (isAlert && l.pred_dir === 0) {
+            action = '매수 추천'; actionIcon = '🎯';
+            actionColor = '#3182F6'; actionBg = '#E8F3FF';
+            actionSub = '하락 후 반등 기회 (확신도 높음)';
+        } else if (isAlert && l.pred_dir === 1) {
+            action = '관망 권장'; actionIcon = '👀';
+            actionColor = '#F59E0B'; actionBg = '#FFF7E6';
+            actionSub = '상승 변동성 — 추격 매수 신중';
+        } else {
+            action = '신호 대기'; actionIcon = '—';
+            actionColor = '#8B95A1'; actionBg = '#F8F9FA';
+            actionSub = '명확한 매수 신호가 없습니다';
+        }
+    }
+
+    const html = `
+    <div style="background:${actionBg}; border-left:4px solid ${actionColor};
+                padding:20px 24px; border-radius:12px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+            <span style="font-size:32px;">${actionIcon}</span>
+            <div>
+                <div style="font-size:22px; font-weight:900; color:${actionColor};">${action}</div>
+                <div style="font-size:13px; color:#4E5968; margin-top:2px;">${actionSub}</div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-label">급변동 가능성</div>
+        <div style="font-size:12px; color:#B0B8C1; margin:-4px 0 10px 0;">
+            내일 원유 가격이 하루에 ±2% 이상 크게 움직일 확률
+        </div>
+        <div style="font-size:36px; font-weight:900; color:${probColor};">
+            ${Math.round(l.prob_anom*100)}%
+        </div>
+        <div class="prob-bar-bg" style="margin-top:16px;">
+            <div class="prob-bar" style="width:${l.prob_anom*100}%; background:${probColor};"></div>
+            <div class="prob-threshold" style="left:${mode.threshold*100}%;"></div>
+            <div class="prob-threshold-label" style="left:${mode.threshold*100}%; top:14px;">
+                알림 기준 ${Math.round(mode.threshold*100)}%
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:16px;">
+        <div style="flex:1; padding:12px; background:#F8F9FA; border-radius:10px; text-align:center;">
+            <div style="font-size:11px; color:#8B95A1; font-weight:700;">예측 방향</div>
+            <div style="font-size:22px; font-weight:900; color:${dirColor}; margin-top:6px;">
+                ${dirIcon} ${dirText}
+            </div>
+        </div>
+        <div style="flex:1; padding:12px; background:#F8F9FA; border-radius:10px; text-align:center;">
+            <div style="font-size:11px; color:#8B95A1; font-weight:700;">예측 수익률</div>
+            <div style="font-size:22px; font-weight:900; color:${retColor}; margin-top:6px;">
+                ${retSign}${l.pred_ret.toFixed(2)}%
+            </div>
+        </div>
+    </div>
+    `;
+    document.getElementById('prediction-card').innerHTML = html;
+}
+
+function renderChart() {
+    const ctx = document.getElementById('priceChart');
+    if (chart) chart.destroy();
+    const h = DATA.history;
+    const labels = h.dates.map(d => d.slice(5));  // MM-DD
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'WTI 가격 ($)',
+                    data: h.prices,
+                    borderColor: '#3182F6',
+                    backgroundColor: 'rgba(49,130,246,0.08)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: 'y',
+                    pointRadius: 0,
+                },
+                {
+                    label: '급변동 확률 (%)',
+                    data: h.prob_anom.map(v => v*100),
+                    borderColor: '#F04452',
+                    backgroundColor: 'rgba(240,68,82,0.05)',
+                    borderWidth: 1.5,
+                    borderDash: [4, 4],
+                    tension: 0.2,
+                    yAxisID: 'y1',
+                    pointRadius: 0,
+                },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: 'bottom', labels:{ font:{size:11}}}},
+            scales: {
+                x: { ticks: { font:{size:10}, maxTicksLimit: 6 }, grid:{display:false}},
+                y:  { position:'left',  ticks: { font:{size:10}}, grid:{color:'#F2F3F5'}},
+                y1: { position:'right', ticks: { font:{size:10}}, grid:{display:false}, min:0, max:100},
+            }
+        }
+    });
+}
+
+// 초기 로드
+loadData().catch(err => {
+    document.body.innerHTML = `<div style="padding:40px; text-align:center; color:#F04452;">
+        데이터를 불러올 수 없습니다.<br><small>${err.message}</small></div>`;
+});
+setMode('risk');
+</script>
+</body>
+</html>
