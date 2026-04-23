@@ -386,10 +386,6 @@ body { background: #F5F6F8; color: #191F28; min-height: 100vh; }
             </tbody>
         </table>
         </div>
-        <div class="caption">
-            급변동(±2% 이상) 감지 목적상 <b>Recall</b>이 핵심 지표 →
-            XGBoost 선정
-        </div>
     </div>
 
     <!-- 혼동행렬 -->
@@ -399,10 +395,6 @@ body { background: #F5F6F8; color: #191F28; min-height: 100vh; }
             5개 모델의 예측 결과를 실제값과 대조한 표
         </div>
         <img src="cm.png" alt="Confusion Matrices" class="chart-img" loading="lazy">
-        <div class="caption">
-            행 = 실제값 / 열 = 예측값 · 대각선이 정답<br>
-            XGBoost는 <b>True Positive(이상변동을 제대로 맞춘 수)</b>가 가장 많음
-        </div>
     </div>
 
     <!-- Fold별 F1 -->
@@ -412,10 +404,6 @@ body { background: #F5F6F8; color: #191F28; min-height: 100vh; }
             시간 순서를 보장하는 시계열 교차검증 결과
         </div>
         <img src="fold_f1.png" alt="Fold F1 Scores" class="chart-img" loading="lazy">
-        <div class="caption">
-            각 Fold(학습기간-검증기간 분할)에서의 F1 점수 ·
-            <b>XGBoost가 모든 Fold에서 안정적으로 상위권 유지</b>
-        </div>
     </div>
 
     <div class="bottom-note">
