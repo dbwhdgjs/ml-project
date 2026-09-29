@@ -9,3 +9,6 @@ env/
 *.log
 ~$*
 .streamlit/secrets.toml
+
+# 발표자료 캡처용 임시 HTML
+docs/_shot_*.html

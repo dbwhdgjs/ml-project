@@ -10,5 +10,29 @@
     "live_last": "2026-04-13",
     "latest_last": "2026-04-17",
     "updated": true
+  },
+  {
+    "run_at": "2026-04-22T23:07:57.644404+09:00",
+    "live_last": "2026-04-20",
+    "latest_last": "2026-04-22",
+    "updated": true
+  },
+  {
+    "run_at": "2026-06-07T01:25:55.904144+09:00",
+    "rows": 1619,
+    "latest_last": "2026-06-05",
+    "updated": true
+  },
+  {
+    "run_at": "2026-06-18T11:25:22.718797+09:00",
+    "rows": 1627,
+    "latest_last": "2026-06-17",
+    "updated": true
+  },
+  {
+    "run_at": "2026-06-18T11:26:56.905667+09:00",
+    "rows": 1627,
+    "latest_last": "2026-06-17",
+    "updated": true
   }
 ]
