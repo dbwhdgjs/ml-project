@@ -30,7 +30,7 @@ streamlit run demo_app.py
 # ============================================
 
 # [6] xlsx 갱신 + JSON 재생성 + 배포 (한 번에)
-cd /Users/yujongheon/Desktop/test/yjh-claude/ML_project
+cd /path/to/ML_project
 python3 week2/code/data_updater.py --update
 python3 docs/export_predictions.py
 git add docs/predictions.json
@@ -65,7 +65,7 @@ launchctl start com.yjh.dataupdater
 
 crontab -e
 # 아래 한 줄 추가 (매일 KST 07:30 실행)
-30 7 * * * /usr/bin/python3 /Users/yujongheon/Desktop/test/yjh-claude/ML_project/week2/code/data_updater.py --update
+30 7 * * * /usr/bin/python3 /path/to/ML_project/week2/code/data_updater.py --update
 
 # ============================================
 # 사이트 자동 배포까지 포함하는 launchd/cron 설정은

@@ -128,7 +128,7 @@ def build():
         Spacer(1, 20*mm),
         Paragraph("지정학적 리스크 기반 원자재 이상 변동 감지 및 가격 예측", S["subtitle"]),
         Spacer(1, 40*mm),
-        Paragraph("20232501 임태후 · 20232514 유종헌", S["subtitle"]),
+        Paragraph("임태후 · 유종헌", S["subtitle"]),
         Paragraph("제출일: 2026-06-04", S["subtitle"]),
         PageBreak(),
     ]

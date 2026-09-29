@@ -158,7 +158,7 @@ def build_pdf():
     elements.append(Paragraph("제출 1 - 초기 설계 &amp; 1차 실행", styles["subtitle"]))
     elements.append(Paragraph("머신러닝 학기 프로젝트", styles["subtitle"]))
     elements.append(Spacer(1, 10*mm))
-    elements.append(Paragraph("조장 : 20232501 임태후&nbsp;&nbsp;&nbsp;&nbsp;조원 : 20232514 유종헌", styles["subtitle"]))
+    elements.append(Paragraph("조장 : 임태후&nbsp;&nbsp;&nbsp;&nbsp;조원 : 유종헌", styles["subtitle"]))
     elements.append(Spacer(1, 6*mm))
     elements.append(Paragraph("2026년 3월", styles["subtitle"]))
     elements.append(PageBreak())

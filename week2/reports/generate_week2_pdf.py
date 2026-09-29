@@ -186,7 +186,7 @@ def build_pdf():
     elements.append(Paragraph("제출 2 - 모델 확장 &amp; 비교", styles["subtitle"]))
     elements.append(Paragraph("머신러닝 학기 프로젝트", styles["subtitle"]))
     elements.append(Spacer(1, 10*mm))
-    elements.append(Paragraph("조장 : 20232501 임태후&nbsp;&nbsp;&nbsp;&nbsp;조원 : 20232514 유종헌", styles["subtitle"]))
+    elements.append(Paragraph("조장 : 임태후&nbsp;&nbsp;&nbsp;&nbsp;조원 : 유종헌", styles["subtitle"]))
     elements.append(PageBreak())
 
     # ===== 1. 모델 선택 이유 =====

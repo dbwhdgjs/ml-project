@@ -87,7 +87,7 @@
     <key>ProgramArguments</key>
     <array>
       <string>/usr/bin/python3</string>
-      <string>/Users/yujongheon/Desktop/test/yjh-claude/ML_project/week2/code/data_updater.py</string>
+      <string>/path/to/ML_project/week2/code/data_updater.py</string>
       <string>--update</string>
     </array>
 
@@ -98,9 +98,9 @@
     </dict>
 
     <key>StandardOutPath</key>
-    <string>/Users/yujongheon/Desktop/test/yjh-claude/ML_project/data/launchd_out.log</string>
+    <string>/path/to/ML_project/data/launchd_out.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/yujongheon/Desktop/test/yjh-claude/ML_project/data/launchd_err.log</string>
+    <string>/path/to/ML_project/data/launchd_err.log</string>
   </dict>
   </plist>
   ---------------------------------------------------------------
@@ -115,7 +115,7 @@
 
 [방법 2] cron 이 익숙하면
       crontab -e
-      30 7 * * * /usr/bin/python3 /Users/yujongheon/Desktop/test/yjh-claude/ML_project/week2/code/data_updater.py --update
+      30 7 * * * /usr/bin/python3 /path/to/ML_project/week2/code/data_updater.py --update
 
 
 -----------------------------------------------
@@ -160,7 +160,7 @@ xlsx 가 바뀌면 JSON 을 재생성하고 git push 해야 사이트에 반영�
 [C] 원스텝 스크립트 예시 (수동 실행용)
 
   #!/bin/bash
-  cd /Users/yujongheon/Desktop/test/yjh-claude/ML_project
+  cd /path/to/ML_project
   python3 week2/code/data_updater.py --update || exit 1
   python3 docs/export_predictions.py          || exit 1
   git add docs/predictions.json
