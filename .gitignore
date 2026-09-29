@@ -12,3 +12,6 @@ env/
 
 # 발표자료 캡처용 임시 HTML
 docs/_shot_*.html
+
+# 제출용 보고서 PDF는 로컬 보관 (저장소에는 README로 정리)
+week*/reports/*.pdf

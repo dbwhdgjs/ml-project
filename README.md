@@ -58,7 +58,7 @@
 - **모델 A** (이상변동 감지, Random Forest): Accuracy 68.3% / Precision 64.0% / **Recall 28.3%** / F1 39.3%
 - **모델 B** (가격 방향 예측): 방향 정확도 47.4% — 동전 던지기보다 낮음. 100만원 시뮬레이션에서 단순 보유(133만원)보다 손실(90만원)
 - Feature 중요도 1위: VIX (0.216)
-- 📄 [1주차 보고서](week1/reports/1주차_보고서.pdf)
+- 📄 [1주차 보고서 전문](week1/reports/1주차_보고서.md)
 
 > **솔직한 진단:** Accuracy 68.3%는 "전부 정상"으로 찍어도 64.5%가 나오는 데이터라 실질 기여가 거의 없었고, 실제 이상변동의 **72%를 놓치고** 있었습니다. 방향 예측은 실패로 판단해 이후 단계에서 이상변동 감지에 집중했습니다.
 
@@ -74,7 +74,7 @@
 | **XGBoost** | 0.623 | 0.408 | **0.320** | **0.352** |
 | KNN | 0.598 | 0.377 | 0.311 | 0.337 |
 
-- 📄 [2주차 보고서](week2/reports/2주차_보고서.pdf)
+- 📄 [중간발표 자료](week2/reports/midterm_presentation.md) · [발표 종합정리](week2/reports/발표_종합정리.md)
 
 > 시간순 검증으로 바꾸자 점수가 전반적으로 떨어졌습니다. **성능이 낮아진 것이 아니라, 1주차 점수가 부풀려져 있었던 것**입니다. Recall이 가장 높은 XGBoost를 이후 주력 모델로 선택했습니다.
 
@@ -84,7 +84,7 @@
 - **GridSearchCV** 튜닝 결과: `learning_rate=0.1, max_depth=6, n_estimators=200`
 - 튜닝 XGBoost: Accuracy 0.723 / Precision 0.519 / **Recall 0.384** / F1 0.441 / ROC-AUC 0.648
 - Feature 중요도 Top3: **20일 변동성(0.104)**, VIX 변동성(0.052), MA ratio(0.050)
-- 📄 [3주차 보고서](week3/reports/3주차_보고서.pdf)
+- 📄 [측정 결과 원본](week3/reports/results.json)
 
 > 2주차 대비 Recall이 32.0% → 38.4%로 올랐습니다. 특히 **"변동성이 이미 커진 국면"**이 다음 이상변동의 가장 강한 신호라는 점이 Feature 중요도로 확인됐습니다.
 
@@ -92,7 +92,7 @@
 - 동일 파이프라인으로 **4종 원자재 동시 학습** + 자재 간 cross feature
 - 고정 임계값 0.5를 버리고 **용도별 임계값**으로 분리 (아래 4·5절)
 - 데이터 자동 수집 → 예측 JSON 생성 → GitHub Pages 배포까지 파이프라인 구성
-- 📄 [4주차 보고서](week4/reports/4주차_보고서.pdf)
+- 📄 [측정 결과 원본](week4/reports/results.json)
 
 ---
 
@@ -175,21 +175,23 @@ ML_project/
 ├── week1/                 베이스라인 (Random Forest)
 │   ├── code/              week1_model.py
 │   ├── charts/            가격 추이·리스크·상관관계·혼동행렬·중요도 (6종)
-│   └── reports/           1주차 보고서 (md, pdf) + PDF 생성 스크립트
+│   └── reports/           1주차 보고서(md), 슬라이드 + PDF 생성 스크립트
 ├── week2/                 5종 모델 비교 + TimeSeriesSplit
 │   ├── code/              week2_model.py, data_updater.py, demo_app.py
 │   ├── charts/            모델 비교·ROC·혼동행렬·fold별 F1
-│   └── reports/           2주차 보고서, 중간발표 자료
+│   └── reports/           중간발표 자료 + PDF 생성 스크립트
 ├── week3/                 Feature 23개 + SMOTE + GridSearchCV
 │   ├── code/              week3_model.py
 │   ├── charts/            2주차 대비 개선·Recall·중요도·ROC
-│   └── reports/           3주차 보고서, results.json
+│   └── reports/           results.json + PDF 생성 스크립트
 ├── week4/                 4종 원자재 + 투트랙 + 자동화
 │   ├── code/              week4_model.py, auto_update.py, streamlit_app.py, make_charts.py
 │   ├── charts/            4종 비교·투트랙·PR곡선·이상비율·진화비교
-│   └── reports/           4주차 보고서, results.json, 기말 발표대본
+│   └── reports/           results.json, 기말 발표대본 + PDF 생성 스크립트
 └── docs/                  GitHub Pages 데모 (index.html, predictions.json, export_predictions.py)
 ```
+
+> 주차별 제출 보고서 PDF는 저장소에 포함하지 않았습니다. 내용은 이 README에 정리되어 있고, `week*/reports/generate_*.py` 로 언제든 다시 생성할 수 있습니다.
 
 ## 9. 실행 방법
 
